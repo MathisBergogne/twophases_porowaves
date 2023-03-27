@@ -1,6 +1,7 @@
 using Plots, Plots.Measures
 default(xmirror = true,size=(1200, 800), framestyle=:box, label=false, grid=false, margin=10mm, lw=6, labelfontsize=20, tickfontsize=20, titlefontsize=24)
 
+@views function hydrostatic_1D()
 # physics
 lx   = 10        # longeur du modèle
 kμf0 = 1         # permeabilite initial m2
@@ -27,3 +28,7 @@ end
 p1 = plot(Pf, xc, title="Pf",yaxis= :flip)
 p2 = plot(qx, xc[2:end], title="qx")
 plot(p1, p2)
+
+end
+
+hydrostatic_1D()
