@@ -36,8 +36,8 @@ for it = 1:nt
     ϕ[2:end-1]  .+= dt .* dϕdt
     # visualisation
     if (it % nvis) == 0 && do_visu
-        p1 = plot(ϕ, xc, title="ϕ",yaxis= :flip, xlims=(0,1.1*maximum(ϕ)))
-        p2 = plot(Pe, xc, title="Pe",yaxis= :flip) 
+        p1 = plot(ϕ, xc, title="ϕ",yaxis= :flip, xlims=(0,0.4))
+        p2 = plot(Pe, xc, title="Pe",yaxis= :flip,xlims=(-0.15,0.15)) 
         display(plot(p1,p2))
     end
 end
