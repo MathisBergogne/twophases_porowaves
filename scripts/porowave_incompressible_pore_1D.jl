@@ -41,9 +41,7 @@ for it = 1:nt
         display(plot(p1,p2))
     end
 end
-p1 = plot(ϕ, xc, title="ϕ",yaxis= :flip, xlims=(0,0.4))
-        p2 = plot(Pe, xc, title="Pe",yaxis= :flip,xlims=(-0.15,0.15)) 
-        display(plot(p1,p2))
+
 end
 
-porowave_1D_86(false)
+porowave_1D_86(true)
