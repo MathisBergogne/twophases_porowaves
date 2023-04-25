@@ -30,14 +30,14 @@ dϕdt   = zeros(nx - 2)
 #loop
 for it = 1:nt 
     qDx   .= kμ0 .* av(ϕ).^npow .* (.- diff(Pe) ./ dx .+ Δρg)
-    dϕdt  .= .- ϕ[2:end-1] .* Pe[2:end-1] ./ η
-    dPedt .= .- diff(qDx) ./ dx .+ dϕdt
+    dϕdt  .= - (1 .- ϕ[2:end-1]) .* ϕ[2:end-1] .* Pe[2:end-1] ./ η
+    dPedt .= .- diff(qDx) ./ dx .+ (1 .- ϕ[2:end-1]) .* dϕdt
     Pe[2:end-1] .+= dt ./ ϕ[2:end-1] ./ Bf .* dPedt
     ϕ[2:end-1]  .+= dt .* dϕdt
     # visualisation
     if (it % nvis) == 0 && do_visu
-        p1 = plot(ϕ, xc, title="ϕ",yaxis= :flip, xlims=(0,0.4))
-        p2 = plot(Pe, xc, title="Pe",yaxis= :flip,xlims=(-0.15,0.15)) 
+        p1 = plot(ϕ, xc, title="ϕ",yaxis= :flip, xlims=(0,1.1*maximum(ϕ)))
+        p2 = plot(Pe, xc, title="Pe",yaxis= :flip) 
         display(plot(p1,p2))
     end
 end
