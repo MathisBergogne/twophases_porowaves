@@ -1,5 +1,5 @@
 using Plots, Plots.Measures, Printf
-default(xmirror = true,size=(1200, 800), framestyle=:box, label=false, grid=false, margin=10mm, lw=6, labelfontsize=20, tickfontsize=20, titlefontsize=24)
+default(size=(1200, 800), framestyle=:box , label=false,  margin=5mm , lw=2, labelfontsize=20, tickfontsize=15, titlefontsize=18)
 
 @views avx(A) = 0.5 .* (A[1:end-1] .+ A[2:end])
 
@@ -23,7 +23,7 @@ Ra   = 1000.0
 nx   = 100      # nombre de noeuds de modèles en x
 dx   = lx / nx    # pas d'espace
 xc   = LinRange(-dx/2, lx+dx/2,nx)   # coordonnées en x des noeuds du modèles
-nt   = 1e2#6       # nombre de pas de temps
+nt   = 1e2       # nombre de pas de temps
 dt   = 1e-3        # pas de temps
 dτ   = 0.01
 nvis = nt / 100
@@ -33,10 +33,10 @@ ncheck  = ceil(Int,0.05nx)
 re_D    = 4π
 cfl     = 1 / 1.1
 # initialisation
-ϕ      = @. Δϕ  * exp(-(xc - (lx*8/10 + dx / 2))^2 / 5.0) + ϕ0
+ϕ      = @. Δϕ  * exp(-(xc - (lx*8/10 + dx / 2))^2 / 10.0) + ϕ0
+φ_init = copy(ϕ)
 T      = @. T0 + ΔT * exp(-(xc - (lx*8/10 + dx / 2))^2 / 5.0)
-T[1]   = T0
-T[end] = T0
+T_init = copy(T)
 T_old  = zeros(nx)
 r_T    = zeros(nx - 2)
 Pe     = zeros(nx)
@@ -59,13 +59,7 @@ k_ηfτ  = zeros(nx - 1)
 re_T   = zeros(nx)
 θ_dτ_T = zeros(nx)
 β_dτ_T = zeros(nx)
-
-# visualisation
-p1 = plot(ϕ, xc, title="ϕ",yaxis= :flip, xlims=(0,0.11))
-p2 = plot(Pe, xc, title="Pe",yaxis= :flip,xlims=(-4.5,4.5)) 
-p3 = plot(T, xc, title="T",yaxis= :flip, xlims=(490,710))
-display(plot(p1,p2,p3))
-
+Count_iter = Float64[]
 #loop
 for it = 1:nt 
     T_old  .= T
@@ -107,18 +101,23 @@ for it = 1:nt
             r_T   .= dTdt .+ diff(qT)./dx
             err_T  = maximum(abs.(r_T))
             err    = max(err_Pe,err_T,err_qD)
+            push!(err_evo,err)
+            push!(iter_evo, iter / nx)
         end
         iter += 1
     end
+    push!(Count_iter, iter / nx)
     #porosity update
     ϕ[2:end-1]  .+= dt .* Pe[2:end-1] ./ η_ϕ[2:end-1] 
     if isnan(ϕ[2]) break end
     # visualisation 
     if (it % nvis) == 0 && do_visu
-        p1 = plot(ϕ, xc, title="ϕ",yaxis= :flip, xlims=(0,0.11))
+        p1 = plot([ϕ,φ_init], xc, title="ϕ",yaxis= :flip, xlims=(0,0.11), label=["ϕ", "φ_init"])
         p2 = plot(Pe, xc, title="Pe",yaxis= :flip,xlims=(-4.5,4.5)) 
-        p3 = plot(T, xc, title="T",yaxis= :flip, xlims=(490,710))
-        display(plot(p1,p2,p3))
+        p3 = plot([T,T_init], xc, title="T",yaxis= :flip, xlims=(490,710))
+        p4 = plot(iter_evo,err_evo,title="iter / nx",yaxis=:log10, minorgrid=true, marker=:circle)
+        p5 = plot(1:it,Count_iter,title="iter / nx", marker=:circle)
+        display(plot(p1,p2,p3,p4,p5))
     end
 end
 
