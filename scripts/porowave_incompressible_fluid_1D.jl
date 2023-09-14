@@ -1,5 +1,5 @@
 using Plots, Plots.Measures, Printf
-default(xmirror = true,size=(1200, 800), framestyle=:box, label=false, grid=false, margin=10mm, lw=6, labelfontsize=20, tickfontsize=20, titlefontsize=24)
+default(xmirror = true,size=(1200, 800), framestyle=:box, label=false, grid=false, margin=10mm, lw=4, labelfontsize=20, tickfontsize=16, titlefontsize=20)
 
 @views av(A) = 0.5 .* (A[1:end-1] .+ A[2:end])
 
@@ -45,10 +45,6 @@ for it = 1:nt
         display(plot(p1,p2))
     end
 end
-
-p1 = plot(ϕ, xc, title="ϕ",yaxis= :flip, xlims=(0,0.4));
-p2 = plot(Pe, xc, title="Pe",yaxis= :flip,xlims=(-0.15,0.15));
-display(plot(p1,p2))
 
 end
 
