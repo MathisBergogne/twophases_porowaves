@@ -16,7 +16,6 @@ dt   = dx^2 / kμf0 / 2.1        # pas de temps
 # initialisation
 qx   = zeros(nx - 1)
 Pf   = @. 1.0 .* exp(-(xc - (lx / 2 + dx / 2))^2)
-Pf_ini = copy(Pf)
 # time loop
 for it = 1:nt
     qx .= .-kμf0 .* (diff(Pf) ./ dx .- ρfg)
