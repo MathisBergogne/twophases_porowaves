@@ -7,7 +7,7 @@ default(size=(1200, 800))#, xmirror = true, framestyle=:box, label=false, grid=f
 lx   = 100        # longeur du modèle
 ϕ0   = 0.01      # porosité du fond
 npow = 3         # puissnace m pour ϕ
-Δϕ   = 0.1       # différence de porosité entre le fond et une bulle de porosité
+Δϕ   = 0.05       # différence de porosité entre le fond et une bulle de porosité
 ρfg  = 1         # masse volumique eau kg m-3, gravite terrestre m s-2
 ρsg  = 2         # masse volumique rocks kg m-3, gravite terrestre m s-2
 Δρg  = ρsg - ρfg # différence des masses volumiqueskg m-3, gravite terrestre m s-2
@@ -18,15 +18,15 @@ kμ0  = 1         # permeabilite initial m2, viscosité fluide Pa s
 nx   = 1000      # nombre de noeuds de modèles en x
 dx   = lx / nx    # pas d'espace
 xc   = LinRange(-dx/2, lx+dx/2,nx)   # coordonnées en x des noeuds du modèles
-nt   = 5e1#6       # nombre de pas de temps
+nt   = 1e2#6       # nombre de pas de temps
 dt   = 1e-3        # pas de temps
 nvis = nt / 100
 maxiter = 20nx
 ncheck  = ceil(Int,0.05nx)
-ϵtol    = 1e-8
+ϵtol    = 1e-8 
 cfl     = 1 / 1.1
 # initialisation
-ϕ      = @. Δϕ  * exp(-(xc - (lx*8/10 + dx / 2))^2 / 5.0) + ϕ0
+ϕ      = @. Δϕ  * exp(-(xc - (lx*9/10 + dx / 2))^2 / 10.0) + ϕ0
 Pe     = zeros(nx)
 Pe_old = zeros(nx)
 qD     = zeros(nx - 1)
