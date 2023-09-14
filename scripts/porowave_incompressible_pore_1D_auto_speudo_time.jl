@@ -1,5 +1,5 @@
 using Plots, Plots.Measures, Printf
-default(xmirror = true,size=(1200, 800), framestyle=:box, label=false, grid=false, margin=10mm, lw=6, labelfontsize=20, tickfontsize=20, titlefontsize=24)
+default(size=(1200, 800))#, xmirror = true, framestyle=:box, label=false, grid=false, margin=10mm, lw=6, labelfontsize=20, tickfontsize=20, titlefontsize=24)
 
 @views avx(A) = 0.5 .* (A[1:end-1] .+ A[2:end])
 
@@ -18,7 +18,7 @@ kμ0  = 1         # permeabilite initial m2, viscosité fluide Pa s
 nx   = 1000      # nombre de noeuds de modèles en x
 dx   = lx / nx    # pas d'espace
 xc   = LinRange(-dx/2, lx+dx/2,nx)   # coordonnées en x des noeuds du modèles
-nt   = 1e2#6       # nombre de pas de temps
+nt   = 5e1#6       # nombre de pas de temps
 dt   = 1e-3        # pas de temps
 nvis = nt / 100
 maxiter = 20nx
@@ -32,7 +32,7 @@ Pe_old = zeros(nx)
 qD     = zeros(nx - 1)
 RPe    = zeros(nx - 2)
 RqD    = zeros(nx - 1)
-η_ϕ    = zeros(nx)
+η_ϕ    = ones(nx)
 k_ηf   = zeros(nx)
 lc_loc = zeros(nx)
 re     = zeros(nx)
@@ -43,8 +43,8 @@ vsdτ   = zeros(nx)
 k_ηfτ  = zeros(nx - 1)
 
 # visualisation
-p1 = plot(ϕ, xc, title="ϕ",yaxis= :flip, xlims=(0,0.11))
-p2 = plot(Pe, xc, title="Pe",yaxis= :flip,xlims=(-4.5,4.5)) 
+p1 = plot(ϕ, xc, title="ϕ",yaxis= :flip,xlims=(0,0.11))
+p2 = plot(Pe, xc, title="Pe",yaxis= :flip,xlims=(-4.5,4.5))
 display(plot(p1,p2))
 
 #loop
@@ -81,8 +81,8 @@ for it = 1:nt
     if isnan(ϕ[2]) break end
     # visualisation 
     if (it % nvis) == 0 && do_visu
-        p1 = plot(ϕ, xc, title="ϕ",yaxis= :flip, xlims=(0,0.12))
-        p2 = plot(Pe, xc, title="Pe",yaxis= :flip,xlims=(-4.5,4.5)) 
+        p1 = plot(ϕ, xc, title="ϕ",yaxis= :flip,xlims=(0,0.11))
+        p2 = plot(Pe, xc, title="Pe",yaxis= :flip,xlims=(-4.5,4.5))
         display(plot(p1,p2))
     end
 end

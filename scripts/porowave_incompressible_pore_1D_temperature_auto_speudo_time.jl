@@ -20,7 +20,7 @@ Ra   = 1000.0
 αρgx,αρgy = 0.0,1.0
 αρg       = sqrt(αρgx^2+αρgy^2)
 # numerics
-nx   = 1000      # nombre de noeuds de modèles en x
+nx   = 100      # nombre de noeuds de modèles en x
 dx   = lx / nx    # pas d'espace
 xc   = LinRange(-dx/2, lx+dx/2,nx)   # coordonnées en x des noeuds du modèles
 nt   = 1e2#6       # nombre de pas de temps
@@ -115,7 +115,7 @@ for it = 1:nt
     if isnan(ϕ[2]) break end
     # visualisation 
     if (it % nvis) == 0 && do_visu
-        p1 = plot(ϕ, xc, title="ϕ",yaxis= :flip, xlims=(0,0.12))
+        p1 = plot(ϕ, xc, title="ϕ",yaxis= :flip, xlims=(0,0.11))
         p2 = plot(Pe, xc, title="Pe",yaxis= :flip,xlims=(-4.5,4.5)) 
         p3 = plot(T, xc, title="T",yaxis= :flip, xlims=(490,710))
         display(plot(p1,p2,p3))
