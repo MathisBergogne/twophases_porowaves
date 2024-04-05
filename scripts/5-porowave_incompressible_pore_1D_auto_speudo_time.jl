@@ -1,5 +1,5 @@
 using Plots, Plots.Measures, Printf
-default(size=(1200, 800), framestyle=:box , label=false,  margin=5mm , lw=2, labelfontsize=20, tickfontsize=15, titlefontsize=18)
+default(size=(1200, 800))#, xmirror = true, framestyle=:box, label=false, grid=false, margin=10mm, lw=6, labelfontsize=20, tickfontsize=20, titlefontsize=24)
 
 @views avx(A) = 0.5 .* (A[1:end-1] .+ A[2:end])
 
@@ -7,46 +7,33 @@ default(size=(1200, 800), framestyle=:box , label=false,  margin=5mm , lw=2, lab
 lx   = 100        # longeur du modèle
 ϕ0   = 0.01      # porosité du fond
 npow = 3         # puissnace m pour ϕ
-Δϕ   = 0.1       # différence de porosité entre le fond et une bulle de porosité
+Δϕ   = 0.05       # différence de porosité entre le fond et une bulle de porosité
 ρfg  = 1         # masse volumique eau kg m-3, gravite terrestre m s-2
 ρsg  = 2         # masse volumique rocks kg m-3, gravite terrestre m s-2
 Δρg  = ρsg - ρfg # différence des masses volumiqueskg m-3, gravite terrestre m s-2
 β    = 1e-10     # compressibilité du fluide 
 η    = 1         # matrix bulk viscosity
 kμ0  = 1         # permeabilite initial m2, viscosité fluide Pa s
-ΔT   = 200.0
-T0   = 500.0
-Ra   = 1000.0
-αρgx,αρgy = 0.0,1.0
-αρg       = sqrt(αρgx^2+αρgy^2)
 # numerics
-nx   = 100      # nombre de noeuds de modèles en x
+nx   = 1000      # nombre de noeuds de modèles en x
 dx   = lx / nx    # pas d'espace
 xc   = LinRange(-dx/2, lx+dx/2,nx)   # coordonnées en x des noeuds du modèles
-nt   = 1e2       # nombre de pas de temps
+nt   = 1e2#6       # nombre de pas de temps
 dt   = 1e-3        # pas de temps
-dτ   = 0.01
 nvis = nt / 100
 maxiter = 20nx
 ncheck  = ceil(Int,0.05nx)
-ϵtol    = 1e-8
-re_D    = 4π
+ϵtol    = 1e-8 
 cfl     = 1 / 1.1
 # initialisation
-ϕ      = @. Δϕ  * exp(-(xc - (lx*8/10 + dx / 2))^2 / 10.0) + ϕ0
-φ_init = copy(ϕ)
-T      = @. T0 + ΔT * exp(-(xc - (lx*8/10 + dx / 2))^2 / 5.0)
-T_init = copy(T)
-T_old  = zeros(nx)
-r_T    = zeros(nx - 2)
+ϕ      = @. Δϕ  * exp(-(xc - (lx*9/10 + dx / 2))^2 / 10.0) + ϕ0
+φ_init = copy(ϕ)    
 Pe     = zeros(nx)
 Pe_old = zeros(nx)
 qD     = zeros(nx - 1)
 RPe    = zeros(nx - 2)
 RqD    = zeros(nx - 1)
-dTdt   = zeros(nx - 2)
-qT     = zeros(nx - 1)
-η_ϕ    = zeros(nx)
+η_ϕ    = ones(nx)
 k_ηf   = zeros(nx)
 lc_loc = zeros(nx)
 re     = zeros(nx)
@@ -55,24 +42,19 @@ vsdτ   = zeros(nx)
 βf_dτ  = zeros(nx)
 η_ϕτ   = zeros(nx)
 k_ηfτ  = zeros(nx - 1)
-λ_ρCp  = zeros(nx)
-re_T   = zeros(nx)
-θ_dτ_T = zeros(nx)
-β_dτ_T = zeros(nx)
-Count_iter = Float64[]
+
+# visualisation
+p1 = plot(ϕ, xc, title="ϕ",yaxis= :flip,xlims=(0,0.11))
+p2 = plot(Pe, xc, title="Pe",yaxis= :flip,xlims=(-4.5,4.5))
+display(plot(p1,p2))
+
 #loop
 for it = 1:nt 
-    T_old  .= T
     Pe_old .= Pe
-    iter = 1; err = 2ϵtol;iter_evo = Float64[]; err_evo = []
+    iter = 1; err = 2ϵtol;
     while err >= ϵtol && iter <= maxiter
         η_ϕ    .= (ϕ0 ./ ϕ)
         k_ηf   .= (ϕ ./ ϕ0) .^ npow
-
-        λ_ρCp   = 1 ./ Ra .* (αρg .* k_ηf .* ΔT .* lx ./ ϕ)
-        re_T    = π .+ sqrt.(π^2 .+ lx^2 ./ λ_ρCp ./ dt)
-        θ_dτ_T  = lx ./ re_T ./ cfl ./ dx
-        β_dτ_T  = (re_T .* λ_ρCp) ./ (cfl .*dx .* lx)
 
         lc_loc .= sqrt.(k_ηf .* η_ϕ)
         re     .= π .+ sqrt.(π .^ 2 .+ (lx ./ lc_loc) .^ 2)
@@ -88,36 +70,21 @@ for it = 1:nt
         RqD     .= .-qD ./ avx(k_ηf) .+ diff(Pe) ./ dx .+ Δρg
         qD     .+= k_ηfτ .* RqD
         # temperature update
-        qT  .-= (qT .+ avx(λ_ρCp) .*(diff(T)./dx))./(1.0 .+ avx(θ_dτ_T))
-        dTdt[2:end-1] .= (T[3:end-2] .- T_old[3:end-2])./dt #.+ 
-            (max.(qD[2:end-2],0.0).*diff(T[2:end-2])./dx .+
-             min.(qD[3:end-1],0.0).*diff(T[3:end-1])./dx )
-        T[2:end-1] .-= (dTdt .+ diff(qT)./dx)./(1.0/dt .+ β_dτ_T[2:end-1])
-        #T[[1,end]]  .= T[[2,end-1]]
-
         if iter % ncheck == 0
             err_qD = maximum(abs.(RqD))
             err_Pe = maximum(abs.(RPe))
-            r_T   .= dTdt .+ diff(qT)./dx
-            err_T  = maximum(abs.(r_T))
-            err    = max(err_Pe,err_T,err_qD)
-            push!(err_evo,err)
-            push!(iter_evo, iter / nx)
+            err    = max(err_Pe,err_qD)
         end
         iter += 1
     end
-    push!(Count_iter, iter / nx)
     #porosity update
     ϕ[2:end-1]  .+= dt .* Pe[2:end-1] ./ η_ϕ[2:end-1] 
     if isnan(ϕ[2]) break end
     # visualisation 
     if (it % nvis) == 0 && do_visu
-        p1 = plot([ϕ,φ_init], xc, title="ϕ",yaxis= :flip, xlims=(0,0.11), label=["ϕ", "φ_init"])
-        p2 = plot(Pe, xc, title="Pe",yaxis= :flip,xlims=(-4.5,4.5)) 
-        p3 = plot([T,T_init], xc, title="T",yaxis= :flip, xlims=(490,710))
-        p4 = plot(iter_evo,err_evo,title="iter / nx",yaxis=:log10, minorgrid=true, marker=:circle)
-        p5 = plot(1:it,Count_iter,title="iter / nx", marker=:circle)
-        display(plot(p1,p2,p3,p4,p5))
+        p1 = plot([ϕ,φ_init], xc, title="ϕ",yaxis= :flip,xlims=(0,0.11))
+        p2 = plot(Pe, xc, title="Pe",yaxis= :flip,xlims=(-4.5,4.5))
+        display(plot(p1,p2))
     end
 end
 

@@ -1,0 +1,5 @@
+Lx : <= 5km (4km grad - 1km cte avec bulle)
+η  : qtz 10^20
+ρ  : 1000(f); ~3000(s) (kg.m^-3) -> (ρg x 10)
+β  : ? (eau : 2.2GPa) 
+kμ0 : ? (-1 - 3 dans l'article d'alexis)
