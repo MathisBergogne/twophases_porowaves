@@ -133,7 +133,7 @@ end
 end
 
 @views function Compute_meca(ϕ, Pe, dPedt, qD, dϕdt, Δρg,k_ηf, η_r, β_f, npow, dx, dt, melt_input)
-	#qD   .= avx(k_ηf .* ϕ.^npow) .* (.- diff(Pe) ./ dx .- Δρg)
+	qD   .= avx(k_ηf .* ϕ.^npow) .* (.- diff(Pe) ./ dx .- Δρg)
     dϕdt  .= .-(1 .- ϕ[2:end-1]) .* (ϕ[2:end-1] ./ η_r[2:end-1]) .* Pe[2:end-1] 
     dPedt .= (1 ./ (ϕ[2:end-1] .* β_f)) .* ( 1 ./ (1 .- ϕ[2:end-1]) .* dϕdt .- diff(qD) ./ dx)
     Pe[2:end-1] .+= dt .* dPedt

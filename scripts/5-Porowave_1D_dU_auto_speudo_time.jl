@@ -100,7 +100,7 @@ end
 @views function Compute_T(T, dU_dt, qD, ρCpT, λT, ρCpf, Grad_T, loc_T, T0, nx, dx, dt, dt_diff)
 	for i = 0:round(dt/dt_diff)
 		dU_dt .= ( .- avx(qD) .* ρCpf .* (T[3:end].-T[1:end-2])./(2*dx)
-			#) .- (diff(λT)./dx .* diff(avx(T))./dx
+			) .- (diff(λT)./dx .* diff(avx(T))./dx
 			) .- avx(λT) .* diff(diff(T)./dx)./dx 
 		T[2:end-1] .= T[2:end-1] .- ( dU_dt ) .* dt_diff ./ ρCpT[2:end-1] 
 		if Grad_T != 0; T[1:Int(round((1-loc_T)*nx))] .= T0; end

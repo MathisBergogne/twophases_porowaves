@@ -1,13 +1,13 @@
 using Plots, ElasticArrays
 using CSV, DataFrames, Printf
 
-include("Porowave_1D_dU.jl")
+include("4-Porowave_1D_dU.jl")
 
 # some boolean
 do_visu		= true		# to make plot
 do_p_bb_h	= true		# to visualize the bubble on plot
-save_plots	= true		# to save plots
-do_save  	= true
+save_plots	= false		# to save plots
+do_save  	= false
 do_p_itr	= false 	# to print iterations
 do_p_var	= true
 
@@ -15,10 +15,10 @@ do_p_vel	= false		# to plot the velocity over time
 melt_input	= false
 
 # set rock viscosity parameters
-	η0_R	= [1e15 1e16 1e17 1e18 1e19]	# [1e15 1e16] # viscosity at 750°C
+	η0_R	= 1e15 # [1e15 1e16 1e17 1e18 1e19]	# [1e15 1e16] # viscosity at 750°C
 	θ_r 	= 0.038			# coefficient with temperature in exponential 
 # set fluid viscosity parameters
-	η0_F	= [1e-3 1e-2 1e-1 1e0 1e1 1e2 1e3] # [1e-3 1e-2 1e-1 1e0 1e1 1e2]			# viscosity at 750°C
+	η0_F	= 1e2 # [1e-3 1e-2 1e-1 1e0 1e1 1e2 1e3] # [1e-3 1e-2 1e-1 1e0 1e1 1e2]			# viscosity at 750°C
 	θ_f 	= 0.03			# coefficient with temperature in exponential 
 
 Perm 	= [1e-11 1e-12 1e-13]  			# matrix permeabiblity
