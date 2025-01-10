@@ -1,25 +1,10 @@
-using Plots, Plots.Measures, Printf, ElasticArrays
-default(size=(900, 600), framestyle=:box , label=false,  margin=5mm , lw=2, labelfontsize=20, tickfontsize=10, titlefontsize=16)
+using CairoMakie, Printf, ElasticArrays
 
 ###################
 #### Functions ####
 ###################
 
 @views avx(A) = 0.5 .* (A[1:end-1] .+ A[2:end])
-
-# @views function bubble_heigh(ϕ, lim_bubb)
-# 	if isnan(ϕ[2]) 
-# 		ϕ_heigh = -1
-# 	elseif minimum(ϕ) < 0
-# 		ϕ_heigh = -1
-# 	else
-# 		ϕ_heigh =  maximum(findall(x->x==maximum(ϕ[1:lim_bubb]), ϕ[1:lim_bubb]))
-# 		if ϕ[ϕ_heigh] == ϕ[lim_bubb]
-# 			ϕ_heigh =  maximum(findall(x->x==maximum(ϕ), ϕ))
-# 		end
-# 	end
-# 	return ϕ_heigh
-# end
 
 @views function bubble_heigh(ϕ,lim_bubb)
 	dϕ = ϕ[1:end-1]-ϕ[2:end]
@@ -80,27 +65,54 @@ end
 		if save_plots savefig(@sprintf("%s/Lc_Tsc",dir_plot)) end
 end
 
+@views function ploting2(ϕ,ϕ_init,T,T_init,qD,Pe,xc,real_time,ϕ_heigh,it,year2sec,save_plots,do_p_bb_h,dir_plot)
+	ΔE = (sum(T)-sum(T_init))/sum(T_init)*100
+	Δϕ = (sum(ϕ)-sum(ϕ_init))/sum(ϕ_init)*100
+	title_plot = @sprintf(" time : %1.1e y; ΔE : %1.1e %s; Δϕ : %1.1e %s",real_time/year2sec,ΔE,"%",Δϕ,"%")
+	# set up plots
+	fig = Figure(fontsize = 11; size=(600, 600))
+	ax =   (ϕ  = Axis(fig[1, 1], title="% of Melt"),
+			qD = Axis(fig[1, 2], title="qD"), 
+			Pe = Axis(fig[1, 3], title="Pe"))
+	plt =  (ϕ  = lines!(ax.ϕ, ϕ.*100, xc),
+			ϕ0 = lines!(ax.ϕ, ϕ_init.*100, xc),
+			qD = lines!(ax.qD, qD, avx(xc)),
+			Pe = lines!(ax.Pe, Pe, xc))
+	if do_p_bb_h bb_h = scatter!(ax.ϕ, ϕ[ϕ_heigh].*100, xc[ϕ_heigh]) end,
+	Label(fig[0, :], text = title_plot, fontsize = 14)
+	display(fig)
+	if save_plots savefig(@sprintf("%s/%04d",dir_plot,it)) end
+end
+
 @views function ploting(ϕ,ϕ_init,T,T_init,ηf_r,η_r,xc,real_time,ϕ_heigh,it,year2sec,save_plots,do_p_bb_h,dir_plot)
 	ΔE = (sum(T)-sum(T_init))/sum(T_init)*100
 	Δϕ = (sum(ϕ)-sum(ϕ_init))/sum(ϕ_init)*100
 	title_plot = @sprintf(" time : %1.1e y; ΔE : %1.1e %s; Δϕ : %1.1e %s",real_time/year2sec,ΔE,"%",Δϕ,"%")
 	# set up plots
-	p1 = plot([ϕ,ϕ_init].*100, xc, title="% of Melt", xlims=(0,60))
-	if do_p_bb_h p1 = scatter!([ϕ[ϕ_heigh].*100], [xc[ϕ_heigh]]) end
-	p2 = plot(ηf_r, xc, title="Fluid viscosity", xaxis=:log10)
-	p3 = plot(η_r, xc, title="Matrix viscosity", xaxis=:log10)
-	p4 = plot([T T_init], xc, title="Temperature", xlims=(500,800))
-	if do_p_bb_h p4 = scatter!([T[ϕ_heigh]], [xc[ϕ_heigh]]) end
-	# Display
-		#display(plot(p1,p4,plot_title=title_plot; layout=(1, 2)))
-		display(plot(p1,p4,p2,p3,plot_title=title_plot; layout=(1, 4)))
-		if save_plots savefig(@sprintf("%s/%04d",dir_plot,it)) end
-end
+	fig = Figure(fontsize = 11; size=(600, 600))
+	ax =   (ϕ  = Axis(fig[1, 1], title="% of Melt", xlims=(0,60)),
+			T = Axis(fig[1, 2], title="T", xlims=(500,800)), 
+			ηf = Axis(fig[1, 3], title="ηf"), 
+			ηr = Axis(fig[1, 4], title="ηr"))
+	lines!(ax.ϕ, ϕ.*100, xc)
+	lines!(ax.ϕ, ϕ_init.*100, xc)
+	lines!(ax.T, T, xc)
+	lines!(ax.T, T_init.*100, xc)
+	lines!(ax.ηf, ηf, xc)
+	lines!(ax.ηr, ηr, xc)
+	if do_p_bb_h 
+		scatter!(ax.ϕ, ϕ[ϕ_heigh].*100, xc[ϕ_heigh])
+		scatter!(ax.T, T[ϕ_heigh].*100, xc[ϕ_heigh]) 
+	end
+	Label(fig[0, :], text = title_plot, fontsize = 14)
+	display(fig)
+	if save_plots savefig(@sprintf("%s/%04d",dir_plot,it)) end
+end 
 
 @views function Compute_T(T, dU_dt, qD, ρCpT, λT, ρCpf, Grad_T, loc_T, T0, nx, dx, dt, dt_diff)
 	for i = 0:round(dt/dt_diff)
 		dU_dt .= ( .- avx(qD) .* ρCpf .* (T[3:end].-T[1:end-2])./(2*dx)
-			#) .- (diff(λT)./dx .* diff(avx(T))./dx
+			) .- (diff(λT)./dx .* diff(avx(T))./dx
 			) .- avx(λT) .* diff(diff(T)./dx)./dx 
 		T[2:end-1] .= T[2:end-1] .- ( dU_dt ) .* dt_diff ./ ρCpT[2:end-1] 
 		if Grad_T != 0; T[1:Int(round((1-loc_T)*nx))] .= T0; end
@@ -125,7 +137,7 @@ end
 	Cpf		= 4185 # Cps*ρs/ρf
 	λs		= 3
 	λf		= 2
-	β_f		= 1e-10							# compressibilité du fluide (Pa-1)
+	β_f		= 1e-1							# compressibilité du fluide (Pa-1)
 	g		= 9.81							# gravity (m.s-2)
 	w		= 500							# shape aspect of the initial melt 
     ϕ_bg	= 1e-2							# back groud amount of melt 
@@ -169,9 +181,9 @@ end
 	Tsc		= η_ϕbg ./ (Δρg .* Lc)	# s
 	#show_caracteristic(Lc, Tsc, xc, dir_plot,save_plots)
 	# numerics time
-	nt 		= 1000 # 1000 # if tsc < 8.e9; 50; else 500 end
+	nt 		= Int64(1e3) # 1000 # if tsc < 8.e9; 50; else 500 end
 	dt_meca = 1e-3 * tsc # if tsc < 8.e9; 1e-2 * tsc; else 1e-3 * tsc end
-	nvis	= nt/50  
+	nvis	= 10 # nt/50  
 	real_time = 0.0
 	dt_diff	= 0.0
 	dt_adv	= 0.0
@@ -259,7 +271,7 @@ end
 		end
 		# compute themperature
 		Compute_T(T, dU_dt, qD, ρCpT, λT, ρCpf, Grad_T, loc_T, T0, nx, dx, dt, dt_diff)
-		#porosity update	
+		#porosity update
 		ϕ .-= dt * (1 .- ϕ) .* Pe ./ η_ϕ 
 		if melt_input == false; ϕ[1]	= 1e-4 end
 		#Break ?
@@ -268,7 +280,8 @@ end
 			nt = it
 			println("viscosity of the matrix : ",η_r[ϕ_heigh],";	viscosity of the melt : ", ηf_r[ϕ_heigh])
 			ϕ_heigh = bubble_heigh(ϕ, lim_bubb)
-			ploting(ϕ,ϕ_init,T,T_init,ηf_r,η_r,xc,real_time,ϕ_heigh,it,year2sec,save_plots,do_p_bb_h,dir_plot)
+			# ploting(ϕ,ϕ_init,T,T_init,ηf_r,η_r,xc,real_time,ϕ_heigh,it,year2sec,save_plots,do_p_bb_h,dir_plot)
+			ploting2(ϕ,ϕ_init,T,T_init,qD,Pe,xc,real_time,ϕ_heigh,it,year2sec,save_plots,do_p_bb_h,dir_plot)
 			break
 		end
 		# visualisation 
@@ -280,7 +293,8 @@ end
 				push!(qD_vel, qD[ϕ_heigh])
 				dt_vel = 0.0
 			end		
-			ploting(ϕ,ϕ_init,T,T_init,ηf_r,η_r,xc,real_time,ϕ_heigh,it,year2sec,save_plots,do_p_bb_h,dir_plot)
+			# ploting(ϕ,ϕ_init,T,T_init,ηf_r,η_r,xc,real_time,ϕ_heigh,it,year2sec,save_plots,do_p_bb_h,dir_plot)
+			ploting2(ϕ,ϕ_init,T,T_init,qD,Pe,xc,real_time,ϕ_heigh,it,year2sec,save_plots,do_p_bb_h,dir_plot)
 		end
 	end
 	

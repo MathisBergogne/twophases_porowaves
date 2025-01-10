@@ -1,4 +1,4 @@
-using Plots, ElasticArrays
+using CairoMakie, ElasticArrays
 using CSV, DataFrames, Printf
 
 include("Porowave_1D_dU_auto_speudo_time.jl")
@@ -11,31 +11,28 @@ do_save  	= false
 do_p_itr	= false 	# to print iterations
 
 do_p_vel	= false		# to plot the velocity over time
-melt_input	= false
+melt_input	= true
 
 # set rock viscosity parameters
-	η0_R	= 5e17			# [1e15 1e16] # viscosity at 750°C
-	θ_r 	= 0.04			# coefficient with temperature in exponential 
+	η0_r	= 1e17			# [1e15 1e16] # viscosity at 750°C
+	θ_r 	= 0.0 # 0.04			# coefficient with temperature in exponential 
 # set fluid viscosity parameters
-	η0_F	= 1e3			# [1e-3 1e-2 1e-1 1e0 1e1 1e2]			# viscosity at 750°C
-	θ_f 	= 0.03			# coefficient with temperature in exponential 
+	η0_f	= 1e4			# [1e-3 1e-2 1e-1 1e0 1e1 1e2]			# viscosity at 750°C
+	θ_f 	= 0.0 # 0.03			# coefficient with temperature in exponential 
 
-Perm 	= 1e-13				# matrix permeabiblity
+perm 	= 1e-11				# matrix permeabiblity
 
 
-@views function main(do_visu, do_p_bb_h, save_plots, do_save, do_p_itr, melt_input, η0_R, θ_r, η0_F, θ_f, Perm)
+@views function main(do_visu, do_p_bb_h, save_plots, do_save, do_p_itr, melt_input, η0_r, θ_r, η0_f, θ_f, perm)
 	f_result = []
 	if save_plots
-		dir_plot = @sprintf("ref_visco-r_%1.1e_visco-f_%1.1e_perm_%1.1e",η0_R,η0_F,Perm) # []
+		dir_plot = @sprintf("ref_visco-r_%1.1e_visco-f_%1.1e_perm_%1.1e",η0_r,η0_f,perm) # []
 	else
 		dir_plot = []
 	end
 	if dir_plot != [] && save_plots
 		mkdir(dir_plot)
 	end	
-	η0_r = η0_R
-	η0_f = η0_F
-	perm = Perm
 	dU_1D(η0_r, θ_r, η0_f, θ_f, perm, do_visu , do_p_bb_h, save_plots, do_save, do_p_itr, melt_input, dir_plot, f_result)
 end
 
@@ -56,7 +53,7 @@ end
 
 t_beg = Base.time()
 
-main(do_visu, do_p_bb_h, save_plots, do_save, do_p_itr, melt_input, η0_R, θ_r, η0_F, θ_f, Perm)
+main(do_visu, do_p_bb_h, save_plots, do_save, do_p_itr, melt_input, η0_r, θ_r, η0_f, θ_f, perm)
 
 t_run = Base.time()-t_beg
 if t_run>3600 Hours_run=round(t_run/3600,RoundDown) else Hours_run = 0 end
